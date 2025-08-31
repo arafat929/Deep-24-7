@@ -1,0 +1,54 @@
+name: 24/7 SSHX Auto-Restart
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [restart_sshx]
+
+jobs:
+  sshx-server:
+    runs-on: ubuntu-latest
+    steps:
+    # Step 1: Start the auto-restart system in background
+    - name: Setup auto-restart
+      run: |
+        # Create a script that will restart after 5 hours 50 minutes
+        cat > /root/restarter.sh << 'EOF'
+        #!/bin/bash
+        sleep 21000  # 5 hours 50 minutes
+        
+        # Trigger new workflow run using the secret token
+        curl -s -X POST \
+          -H "Authorization: token ${{ secrets.AUTO_TRIGGER_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type": "restart_sshx"}'
+        echo "Restart triggered!"
+        EOF
+
+        # Make it executable and run in background
+        chmod +x /root/restarter.sh
+        /root/restarter.sh &
+        echo "Auto-restart system activated!"
+
+    # Step 2: Launch the SSHX web terminal
+    - name: Launch SSHX Web Terminal
+      run: |
+        echo "========================================"
+        echo "🚀 SSHX ROOT ACCESS - 24/7 SERVER"
+        echo "========================================"
+        echo "This session will auto-restart every 6 hours"
+        echo "Web terminal:"
+        curl -fsSL https://sshx.io/get.sh | sh
+
+    # Step 3: Emergency restart if anything fails
+    - name: Emergency restart
+      if: always()
+      run: |
+        echo "Session ending. Triggering emergency restart..."
+        sleep 5
+        curl -s -X POST \
+          -H "Authorization: token ${{ secrets.AUTO_TRIGGER_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/dispatches \
+          -d '{"event_type": "restart_sshx"}'
