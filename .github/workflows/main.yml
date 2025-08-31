@@ -1,0 +1,14 @@
+name: 24/7 SSHX Server
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  sshx-server:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Start SSHX Session
+      run: |
+        echo "🚀 Starting SSHX Web Terminal..."
+        echo "Click the link below for root access:"
+        curl -fsSL https://sshx.io/get.sh | sh
